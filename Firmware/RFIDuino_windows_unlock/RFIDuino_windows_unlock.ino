@@ -1,13 +1,21 @@
 /***************************************************************************
- * RFIDuino Hello World 
+ * RFIDuino Windows Unlock
  *
  * This demo uses the RFIDuino sheild, a Geekduino (or other Arduino Board)
- * and the RFIDuino library to scan for a tag. Once a tag is read, the ID of
- * the tag is stored as an array of 5 byte-sized numbers. This array of numbers 
- * represents the ID. After a sucessful read, these 6 numbers will be sent over
- * the Arduino's Serial Port. This demo can also be used to send data to
- * XBee modules.
+ * to send an RFID to a Windows Vista/7/8/10 PC. See the link below for 
+ * windows software and instructions.
  *
+ * Links
+ *    RFIDUino Windows Login Instructions
+ *      http://learn.robotgeek.com/getting-started/41-rfiduino/181-rfiduino-windows-login.html
+ *    RFIDUino Getting Started Guide
+ *      http://learn.robotgeek.com/getting-started/41-rfiduino/142-rfiduino-getting-started-guide.html
+ *    RFIDUino Library Documentation
+ *      http://learn.robotgeek.com/41-rfiduino/144-rfiduino-library-documentation.html
+ *    RFIDUino Shield Product Page
+ *      http://www.robotgeek.com/rfiduino
+ *  
+ * Notes
  * The RFIDuino library is compatible with both versions of the RFIDuino shield
  * (1.1 and 1.2), but the user must initialize the library correctly. See 
  * 'HARDWARE VERSION' instructions near the beginning of the code.
@@ -16,23 +24,13 @@
  * This includes any of the EM4102 tags sold by Trossen Robotics/ RobotGeek. 
  * The RFIDuino shield may not work with tags outside the EM4100 family
  *
- *
- * Links
- *    RFIDUino Getting Started Guide
- *      http://learn.robotgeek.com/getting-started/41-rfiduino/142-rfiduino-getting-started-guide.html
- *    RFIDUino Library Documentation
- *      http://learn.robotgeek.com/41-rfiduino/144-rfiduino-library-documentation.html
- *    RFIDUino Shield Product Page
- *      http://www.robotgeek.com/rfiduino
- *  
- *
  * User Output pins
  *    myRFIDuino.led1 - Red LED
  *    myRFIDuino.led2 - Green LED
  *    myRFIDuino.buzzer - Buzzer
  *
  ***************************************************************************/
- 
+
 #include <RFIDuino.h> //include the RFIDuino Library
 
 #define SERIAL_PORT Serial      //Serial port definition for Geekduino, Arduino Uno, and most Arduino Boards
@@ -48,12 +46,28 @@ RFIDuino myRFIDuino(1.2);   //initialize an RFIDuino object for hardware version
 
 byte tagData[5]; //Holds the ID numbers from the tag  
 
+int melody[] = {
+  666, 1444, 666}; //holds notes to be played on tone
+int noteDurations[] = {
+  4, 8, 8 }; //holds duration of notes: 4 = quarter note, 8 = eighth note, etc.
+
 void setup()
 {
   //begin serial communicatons at 9600 baud and print a startup message
   SERIAL_PORT.begin(9600);
   SERIAL_PORT.print(">");
-
+  
+  //Comment out to turn off Debug Mode Buzzer START
+  for (int thisNote = 0; thisNote < 3; thisNote++)
+  {
+    int noteDuration = 1000/noteDurations[thisNote];
+    tone(5, melody[thisNote],noteDuration);
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    noTone(5);
+  }
+  //Comment out to turn off Debug Mode Buzzer END
+  
   //The RFIDUINO hardware pins and user outputs(Buzzer / LEDS) are all initialized via pinMode() in the library initialization, so you don not need to to that manually
 }
 
@@ -62,6 +76,8 @@ void loop()
   //scan for a tag - if a tag is sucesfully scanned, return a 'true' and proceed
   if(myRFIDuino.scanForTag(tagData) == true)
   {
+    digitalWrite(myRFIDuino.led2,HIGH);     //turn green LED on
+    
     SERIAL_PORT.print("ID:"); //print a header to the Serial port.
     //loop through the byte array
     for(int n=0;n<5;n++)
@@ -72,10 +88,9 @@ void loop()
         SERIAL_PORT.print(" ");
       }
     }
-    SERIAL_PORT.print("\r\n>");//return character for next line
+    SERIAL_PORT.print("\r\n>");//return character for next line and the prompt characer '>' for the next line
              
-    digitalWrite(myRFIDuino.led2,HIGH);     //turn green LED on
-    delay(500);                             //wait for 1 second
+    delay(500);                             //wait for .5 second
     digitalWrite(myRFIDuino.led2,LOW);      //turn the green LED off
 
 
