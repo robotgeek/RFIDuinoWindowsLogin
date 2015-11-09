@@ -61,10 +61,10 @@ void setup()
   for (int thisNote = 0; thisNote < 3; thisNote++)
   {
     int noteDuration = 1000/noteDurations[thisNote];
-    tone(5, melody[thisNote],noteDuration);
+    tone(myRFIDuino.buzzer, melody[thisNote],noteDuration);
     int pauseBetweenNotes = noteDuration * 1.30;
     delay(pauseBetweenNotes);
-    noTone(5);
+    noTone(myRFIDuino.buzzer);
   }
   //Comment out to turn off Debug Mode Buzzer END
   
