@@ -9,6 +9,18 @@
 
 #include "RFIDListener.h"
 #include <strsafe.h>
+#include <string>           // For std::wstring
+#include "crypt.h"
+
+#include <fstream>
+#include <iostream>
+
+#define DEBUG 0
+
+
+
+using namespace System;
+using namespace System::IO;
 
 // length of RFID data in badge
 const int RFID_Length = 50;	// maximum RFID message length
@@ -65,25 +77,51 @@ void CRFIDListener::ReadCredentials()
 		char *pText = new char[size+1];
 		ZeroMemory(pText, size+1);
 		ReadFile(hFile, pText, size, &size, NULL);
-		CloseHandle(hFile);
-		// TODO: If entire file is encrypted, this is where decryption should occur
+
 		CString text = pText;
 		delete []pText;
+		std::size_t found = text.Find(_T("|||"));
+		CloseHandle(hFile);
 
+
+		if (found != std::string::npos) {
+			//MessageBox(NULL, _T("Not Encrypted"), _T(__FUNCTION__), MB_OK | MB_TOPMOST);
+			//Not encrypted so we need to encrypt the data first time
+			std::string stext = CW2A(text.GetString());
+			//MessageBox(NULL, _T("Not Encrypted: "), _T(__FUNCTION__), MB_OK | MB_TOPMOST);
+			std::ofstream out("C:/Windows/System32/RFIDCredentials.txt");
+			out << encrypt(stext, std::string("Jnmd3fdd1daa!#k"));
+			out.close();
+		}
+		else {
+			std::string stext = CW2A(text.GetString());
+			//MessageBox(NULL, _T("Encrypted: "), _T(__FUNCTION__), MB_OK | MB_TOPMOST);
+			text = decrypt(stext, std::string("Jnmd3fdd1daa!#k")).c_str();
+			if (DEBUG)
+				MessageBox(NULL, "DECRYPTED: " + text, _T(__FUNCTION__), MB_OK | MB_TOPMOST);
+		}
+
+
+		
 		// parse text file by lines
 		CString sLine;
 		int line = 0;
 		for (sLine = text.Tokenize(_T("\r\n"), line); line != -1; sLine = text.Tokenize(_T("\r\n"), line))
 		{
-			// add each credential, parsing the line by pipe characters '|'
+			// add each credential, parsing the line by pipe characters '|||'
 			int nIndex = Credentials.Add();
 			int field = 0;
-			Credentials[nIndex].sID = sLine.Tokenize(_T("|"), field);
-			Credentials[nIndex].sUserName = sLine.Tokenize(_T("|"), field);
-			Credentials[nIndex].sPassword = sLine.Tokenize(_T("|"), field);
+			Credentials[nIndex].sID = sLine.Tokenize(_T("|||"), field);
+			Credentials[nIndex].sUserName = sLine.Tokenize(_T("|||"), field);
+			Credentials[nIndex].sPassword = sLine.Tokenize(_T("|||"), field);
+			if (DEBUG)
+				MessageBox(NULL, "[" + Credentials[nIndex].sID + "], "+ "[" + Credentials[nIndex].sUserName + "], " + "[" + Credentials[nIndex].sPassword + "]", _T(__FUNCTION__), MB_OK | MB_TOPMOST);
 		}
 	}
+
 }
+
+
 
 // Read the settings file C:\Windows\System32\RFIDCredSettings.txt
 // The file is formated with one setting per line.
@@ -122,7 +160,7 @@ void CRFIDListener::ReadSettings()
 			}
 		}
 
-		if (0)	// change (0) to (1) for debugging purposes
+		if (DEBUG)	// change (0) to (1) for debugging purposes
 		{
 			CString msg;
 			msg = CString(_T("Port: ")) + RFID_Port + CString(_T("\r\nLead: ")) + RFID_Lead + CString(_T("!!!\r\nTerm: ")) + RFID_Term;
@@ -255,7 +293,7 @@ void CRFIDListener::WaitForSerialData()
 				// add it to our buffer
 				_RFID[nIndex++] = buffer;
 
-				if (0)	// change (0) to (1) for debugging purposes
+				if (DEBUG)	// change (0) to (1) for debugging purposes
 				{
 					CString msg;
 					msg.Format(_T("Reading COM data:\r\nstate = %d\r\nnIndex = %d\r\nRFID = %s"), state, nIndex, _RFID);
@@ -301,16 +339,20 @@ void CRFIDListener::WaitForSerialData()
 							ZeroMemory(_UserName, sizeof(_UserName));
 							ZeroMemory(_Password, sizeof(_Password));
 							//state = Lead_in;
-
+						
 							// find ID in our credentials file
 							for (size_t i = 0; i < Credentials.GetCount(); ++i)
 							{
 								// when found, set the user name and password
 								// and signal the provider
+								if (DEBUG)
+									MessageBox(NULL, Credentials[i].sID + "?=" + _RFID, _T(__FUNCTION__), MB_OK | MB_TOPMOST);
 								if (Credentials[i].sID == _RFID)
 								{
+									if (DEBUG)
+										MessageBox(NULL, _T("YES"), _T(__FUNCTION__), MB_OK | MB_TOPMOST);
 									lstrcpy(_UserName, Credentials[i].sUserName);
-									lstrcpy(_Password, Credentials[i].sPassword);
+									lstrcpy(_Password, Credentials[i].sPassword);									
 									_pProvider->OnConnectStatusChanged();
 									break;
 								}

@@ -17,6 +17,9 @@
 #include "guid.h"
 #include "RFIDListener.h"
 
+#define DEBUG 0
+
+
 // CRFIDCredential ////////////////////////////////////////////////////////
 
 CRFIDCredential::CRFIDCredential():
@@ -379,7 +382,7 @@ HRESULT CRFIDCredential::GetSerialization(
 	else
 		bResult = GetComputerNameW(wsz, &cch);	// get computer name for local login
     
-	if (0) // change (0) to (1) for debug purposes
+	if (DEBUG) // change (0) to (1) for debug purposes
 	{
 		CString msg;
 		msg.Format(_T("User = %s\r\nDomain = %s\r\nPassword = %s"), sUserName, wsz, _rgFieldStrings[SFI_PASSWORD]);
