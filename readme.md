@@ -13,3 +13,12 @@ This project is based on / uses code from the original Windows Login Project fro
 http://amal.net
 
 Thank you to Eric Jastram for compilation and editing support.
+
+=======
+
+updated by haimiko:
+
+Added basic file encryption so that the credentials aren't in clear text.  This isn't fool proof but will have to do for now until I have more time to work on it.  It will keep someone from casually stumbling on the password in the text file.  Use at your own risk.
+
+The first time it detects that the file is not encrypted, it encrypts it.  Whenever you change your password, you will need to replace with the cleartext file with the updated password.  
+
