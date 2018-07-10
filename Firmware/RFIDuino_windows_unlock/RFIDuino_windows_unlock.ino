@@ -23,7 +23,7 @@
 
 #define RST_PIN         9          // Configurable, see typical pin layout above
 #define SS_PIN          10         // Configurable, see typical pin layout above
-
+#define READ_LED         2         // LED used to display card read
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
@@ -36,6 +36,7 @@ void setup()
   //begin serial communicatons at 9600 baud and print a startup message
   Serial.begin(9600);
   Serial.print(">");
+  pinMode(READ_LED, OUTPUT);
 }
 
 void loop()
@@ -53,18 +54,19 @@ void loop()
   }
 
   Serial.print("ID:"); //print a header to the Serial port.
-   for (byte i = 0; i < mfrc522.uid.size; i++) 
+   for (byte i = 0; i < mfrc522.uid.size+8; i++) 
   {
      Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
       Serial.print(mfrc522.uid.uidByte[i], HEX);
      
   }
    Serial.print("\r\n>");//return character for next line
+   digitalWrite(READ_LED, HIGH); 
    delay(1000);
+   digitalWrite(READ_LED, LOW); 
 
 }
  
   
   
-
 
