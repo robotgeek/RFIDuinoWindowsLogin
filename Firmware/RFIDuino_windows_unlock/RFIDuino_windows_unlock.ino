@@ -41,7 +41,7 @@ void setup()
 
 void loop()
 {   
-  delay(200);
+  delay(10);
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
   {
